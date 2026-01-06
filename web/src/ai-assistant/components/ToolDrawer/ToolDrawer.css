@@ -1,0 +1,67 @@
+.tool-drawer {
+  position: fixed;
+  right: 440px; /* Chat drawer width (400px) + gap (16px) + chat drawer right margin (24px) */
+  bottom: 24px;
+  max-height: 600px; /* Match chat drawer max height */
+  background: transparent; /* Invisible background */
+  z-index: 1001; /* Same as chat drawer */
+  overflow-y: visible; /* Allow components to show naturally */
+  min-width: 350px;
+  max-width: 600px;
+  width: fit-content;
+  pointer-events: none; /* Allow clicks to pass through transparent areas */
+}
+
+.tool-drawer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  justify-content: flex-end; /* Align to bottom */
+  min-height: 0;
+  pointer-events: auto; /* Re-enable pointer events for actual content */
+}
+
+.tool-error {
+  color: #dc3545;
+  padding: 16px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .tool-drawer {
+    right: 420px; /* Adjust for smaller screens */
+    min-width: 280px;
+    max-width: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tool-drawer {
+    /* On tablet/mobile, stack above chat drawer */
+    right: 24px;
+    bottom: 640px; /* Chat drawer height (600px) + gap (40px) */
+    max-height: 400px;
+    min-width: calc(100vw - 48px);
+    max-width: calc(100vw - 48px);
+  }
+}
+
+@media (max-width: 480px) {
+  .tool-drawer {
+    right: 12px;
+    left: 12px;
+    bottom: auto;
+    top: 12px;
+    max-height: 40vh;
+    width: auto;
+    max-width: 100%;
+  }
+
+  .tool-drawer-item {
+    border-radius: 12px;
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "ai-assistant-api",
+  "version": "1.0.0",
+  "description": "AI Assistant API using Express.js and LangChain",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js"
+  },
+  "keywords": [
+    "ai",
+    "api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@langchain/anthropic": "^1.3.1",
+    "@langchain/ollama": "^1.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "langchain": "^1.2.1"
+  }
+}
