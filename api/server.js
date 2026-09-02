@@ -3,6 +3,8 @@ import cors from 'cors';
 import ChatController from './controllers/chatController.js';
 import chatRoutes from './routes/chat.js';
 import exampleRoutes from './routes/examples.js';
+import FeedbackController from './controllers/feedbackController.js';
+import feedbackRoutes from './routes/feedback.js';
 
 export default ({ config, aiAgentService }) => {
   const app = express();
@@ -20,6 +22,13 @@ export default ({ config, aiAgentService }) => {
 
 
   app.use(chatRoutes(new ChatController(aiAgentService)));
+
+  // Feedback routes (thumbs up/down + comment on assistant replies) - only mounted when
+  // FEEDBACK_ENABLED=true, see config.js.
+  if (config.feedbackEnabled) {
+    app.use(feedbackRoutes(new FeedbackController(config)));
+    console.log(`Feedback enabled (mode: ${config.feedbackMode})`);
+  }
 
   // Example routes (REMOVE THIS LINE to delete all examples)
   app.use(exampleRoutes);

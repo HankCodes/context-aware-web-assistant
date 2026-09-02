@@ -1,9 +1,11 @@
 import React, { useRef, useEffect } from 'react';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
+import { MessageFeedback } from '../MessageFeedback';
+import { getToolRenderLocation } from '../../tools/toolHandler';
 import './ChatDrawer.css';
 
-function ChatDrawer({ isOpen, onClose, messages, onSendMessage, isLoading, error }) {
+function ChatDrawer({ isOpen, onClose, messages, onSendMessage, isLoading, error, context }) {
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -20,7 +22,13 @@ function ChatDrawer({ isOpen, onClose, messages, onSendMessage, isLoading, error
     return null;
   }
 
-  const textMessages = messages.filter(msg => msg.role !== 'tool');
+  // Keep every user/assistant message, plus any 'tool' message whose tool is configured with
+  // renderLocation: 'inline' (see toolsConfig.js) - those render in place via ChatMessage, the
+  // way any other message would. Tool messages for 'drawer'/'component-area' tools are skipped
+  // here; they render elsewhere (ToolDrawer / <ComponentArea />) from AIAssistantContext instead.
+  const visibleMessages = messages.filter(
+    (msg) => msg.role !== 'tool' || getToolRenderLocation(msg.toolName) === 'inline'
+  );
 
   return (
     <>
@@ -38,18 +46,28 @@ function ChatDrawer({ isOpen, onClose, messages, onSendMessage, isLoading, error
         </div>
 
         <div className="chat-drawer-messages">
-          {textMessages.length === 0 && !error && (
+          {visibleMessages.length === 0 && !error && (
             <div className="chat-drawer-welcome">
               <p>👋 Hi! How can I help you today?</p>
             </div>
           )}
 
-          {textMessages.map((msg, index) => (
-            <ChatMessage
-              key={index}
-              role={msg.role}
-              content={msg.content}
-            />
+          {visibleMessages.map((msg, index) => (
+            <div key={index}>
+              <ChatMessage
+                role={msg.role}
+                content={msg.content}
+                toolName={msg.toolName}
+                data={msg.data}
+              />
+              {msg.role === 'assistant' && (
+                <MessageFeedback
+                  message={msg}
+                  conversation={messages.slice(0, messages.indexOf(msg) + 1)}
+                  context={context}
+                />
+              )}
+            </div>
           ))}
 
           {isLoading && (

@@ -7,9 +7,11 @@ export { AIAssistantProvider, useAIAssistant } from './AIAssistantContext';
 // Individual components (for custom layouts)
 export { default as ComponentArea } from './components/ComponentArea/ComponentArea';
 export { ChatBubble, ChatDrawer } from './components/AIChat';
+export { MessageFeedback } from './components/MessageFeedback';
 
 // Services
 export { sendChatMessage, checkHealth } from './services/chatService';
+export { submitFeedback } from './services/feedbackService';
 
 // Tools and tool configuration
 export * from './components/AIToolComponents';

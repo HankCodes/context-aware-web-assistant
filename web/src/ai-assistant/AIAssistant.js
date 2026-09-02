@@ -3,7 +3,7 @@ import { ChatBubble, ChatDrawer } from './components/AIChat';
 import { ToolDrawer } from './components/ToolDrawer';
 import AgentNotification from './components/AgentNotification';
 import { sendChatMessage, checkHealth } from './services/chatService';
-import { executeToolCall } from './tools/toolHandler';
+import { executeToolCall, getToolRenderLocation } from './tools/toolHandler';
 import { useAIAssistant } from './AIAssistantContext';
 
 /**
@@ -129,16 +129,40 @@ function AIAssistant() {
               toolCall.parameters
             );
 
-            // Add tool result to context (automatically categorized by render location)
-            const toolResultItem = {
-              toolName: toolCall.toolName,
-              toolId: toolCall.id,
-              data: toolResult
-            };
+            const renderLocation = getToolRenderLocation(toolCall.toolName);
 
-            addToolResult(toolResultItem);
+            if (renderLocation === 'answer') {
+              // This tool never renders UI - hand the real result back to the backend so the
+              // model can compose the actual reply from it on a second turn, then show THAT as
+              // the answer. Nothing goes into toolResults or the message list as a 'tool' entry
+              // for this one; the follow-up assistant text below is the visible outcome.
+              const followUp = await sendChatMessage(userMessage, chatHistory, context, {
+                id: toolCall.id,
+                toolName: toolCall.toolName,
+                parameters: toolCall.parameters,
+                result: toolResult
+              });
 
-            // Also add a marker to messages so we can track it
+              if (followUp.text) {
+                setMessages((prev) => [...prev, { role: 'assistant', content: followUp.text }]);
+              }
+              continue;
+            }
+
+            // 'drawer' and 'component-area' tools are deduplicated-by-name standalone widgets,
+            // tracked in context so ToolDrawer/ComponentArea can read them from anywhere.
+            // 'inline' tools skip this - they render directly from the message list below
+            // instead, once per call, in order (see ChatDrawer.js).
+            if (renderLocation !== 'inline') {
+              addToolResult({
+                toolName: toolCall.toolName,
+                toolId: toolCall.id,
+                data: toolResult
+              });
+            }
+
+            // Also add a marker to messages so we can track it (and so 'inline' tools have
+            // something to render from, in the right position in the conversation).
             const toolMessage = {
               role: 'tool',
               toolName: toolCall.toolName,
@@ -216,6 +240,7 @@ function AIAssistant() {
         onSendMessage={handleSendMessage}
         isLoading={isLoading}
         error={error}
+        context={context}
       />
     </>
   );

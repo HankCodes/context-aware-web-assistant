@@ -43,6 +43,21 @@ const tools = [
       required: [],
     },
   },
+  {
+    name: 'getSampleDataCount',
+    description:
+      "Answers a factual question about the sample data (e.g. \"how many sample items are there?\", \"how many books do you have?\") by counting real items instead of guessing. This tool's result is NOT shown to the user directly - it is sent back to you afterward so you can compose the actual answer yourself in a follow-up reply (see the 'answer' render location in the frontend's toolsConfig.js). Never estimate a count yourself when this tool can fetch the real one.",
+    schema: {
+      type: 'object',
+      properties: {
+        category: {
+          type: 'string',
+          description: 'Optional category to count (e.g., "books", "products", "services"). If not provided, counts all items.',
+        },
+      },
+      required: [],
+    },
+  },
 ];
 
 /**

@@ -21,6 +21,20 @@ const config = {
   // Prompt configuration
   systemPrompt: process.env.SYSTEM_PROMPT || 'default',
   assistantName: process.env.ASSISTANT_NAME || 'AI Assistant',
+
+  // Feedback (thumbs up/down on assistant replies) configuration.
+  // - Set FEEDBACK_ENABLED=false (or omit it) to leave the /feedback route unmounted entirely -
+  //   this is a dev/product-feedback add-on, not core to the assistant.
+  // - 'local' writes each rating as a JSON file under api/feedback/ (gitignored) - handy for a
+  //   developer to review locally and act on ("here's what went wrong, fix it").
+  // - 'api' forwards each rating to FEEDBACK_API_URL instead, for collecting real user feedback
+  //   in a deployed app. The frontend's feedbackService.js is identical either way - only this
+  //   config decides where a rating actually goes, the same way AI_PROVIDER decides which LLM
+  //   backs /chat without the frontend needing to know or care.
+  feedbackEnabled: (process.env.FEEDBACK_ENABLED || 'false').toLowerCase() === 'true',
+  feedbackMode: process.env.FEEDBACK_MODE || 'local',
+  feedbackApiUrl: process.env.FEEDBACK_API_URL,
+  feedbackApiKey: process.env.FEEDBACK_API_KEY,
 };
 
 const modelByProvider = {
@@ -37,6 +51,15 @@ function validateConfig() {
 
   if (!['claude', 'ollama', 'lmstudio'].includes(config.aiProvider)) {
     throw new Error('AI_PROVIDER must be one of "claude", "ollama", or "lmstudio"');
+  }
+
+  if (config.feedbackEnabled) {
+    if (!['local', 'api'].includes(config.feedbackMode)) {
+      throw new Error('FEEDBACK_MODE must be either "local" or "api"');
+    }
+    if (config.feedbackMode === 'api' && !config.feedbackApiUrl) {
+      throw new Error('FEEDBACK_API_URL is required when FEEDBACK_MODE is set to "api"');
+    }
   }
 }
 

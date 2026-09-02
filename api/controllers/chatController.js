@@ -6,7 +6,7 @@ class ChatController {
 
   async chat(req, res) {
     try {
-      const { message, chatHistory = [], context = {} } = req.body;
+      const { message, chatHistory = [], context = {}, toolResult } = req.body;
 
       if (!message || typeof message !== 'string') {
         return res.status(400).json({
@@ -14,7 +14,7 @@ class ChatController {
         });
       }
 
-      const result = await this.aiAgentService.processChat(message, chatHistory, context);
+      const result = await this.aiAgentService.processChat(message, chatHistory, context, toolResult);
 
       res.json(result);
 

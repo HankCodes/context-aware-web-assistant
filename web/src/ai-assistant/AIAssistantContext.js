@@ -144,6 +144,14 @@ export function AIAssistantProvider({ children }) {
     setHasUnreadAgentMessages(false);
   }, []);
 
+  // Only 'drawer' and 'component-area' tools live here, deduplicated by tool name (the newest
+  // result for a given tool replaces the previous one - see addToolResult above). 'inline'
+  // tools are intentionally NOT tracked in toolResults at all: they render directly in the chat
+  // message list (see ChatDrawer.js), in order, once per call - deduplicating them by name
+  // would hide an earlier inline result the moment the same tool was called again later in the
+  // same conversation, which is wrong for something that reads like a chat message. 'answer'
+  // tools never reach toolResults either - AIAssistant.js sends their result straight back to
+  // the backend instead of rendering anything.
   const componentAreaTools = useMemo(() => {
     return toolResults.filter(tool =>
       getToolRenderLocation(tool.toolName) === 'component-area'
