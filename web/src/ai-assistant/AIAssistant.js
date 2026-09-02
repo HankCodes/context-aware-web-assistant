@@ -80,7 +80,9 @@ function AIAssistant() {
         });
       });
 
-      markAgentMessagesAsRead();
+      if (unreadMessages.length > 0) {
+        markAgentMessagesAsRead();
+      }
     }
   }, [isChatDrawerOpen, agentMessages, markAgentMessagesAsRead]);
 

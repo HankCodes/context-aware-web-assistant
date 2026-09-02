@@ -130,7 +130,9 @@ export function AIAssistantProvider({ children }) {
    * Mark all agent messages as read
    */
   const markAgentMessagesAsRead = useCallback(() => {
-    setAgentMessages(prev => prev.map(msg => ({ ...msg, read: true })));
+    setAgentMessages(prev =>
+      prev.every(msg => msg.read) ? prev : prev.map(msg => ({ ...msg, read: true }))
+    );
     setHasUnreadAgentMessages(false);
   }, []);
 
