@@ -17,12 +17,12 @@ function ToolDrawer({ toolResults, isOpen, onRemoveTool }) {
   return (
     <div className="tool-drawer">
       <div className="tool-drawer-content">
-        {toolResults.map((result, index) => {
+        {toolResults.map((result) => {
           const ToolComponent = getToolRenderer(result.toolName);
 
           if (!ToolComponent) {
             return (
-              <ToolCard key={index} onClose={() => onRemoveTool(result.toolName)}>
+              <ToolCard key={result.toolName} onClose={() => onRemoveTool(result.toolName)}>
                 <div className="tool-error">
                   Unknown tool: {result.toolName}
                 </div>
@@ -31,7 +31,7 @@ function ToolDrawer({ toolResults, isOpen, onRemoveTool }) {
           }
 
           return (
-            <ToolCard key={index} onClose={() => onRemoveTool(result.toolName)}>
+            <ToolCard key={result.toolName} onClose={() => onRemoveTool(result.toolName)}>
               <ToolComponent data={result.data} />
             </ToolCard>
           );

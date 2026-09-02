@@ -14,6 +14,7 @@
 
 import TimeDisplay from '../components/AIToolComponents/TimeDisplay';
 import SampleDataList from '../components/AIToolComponents/SampleDataList';
+import { ProfileFormToolCard } from '../components/AIToolComponents/ProfileForm';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
@@ -67,6 +68,17 @@ export const toolsConfig = {
     },
     component: SampleDataList,
     renderLocation: 'component-area'
+  },
+
+  /**
+   * Update Profile Context Tool
+   * Pure frontend tool - no backend call needed. Renders a form the user
+   * fills in and saves; saving merges the values into shared context.
+   */
+  updateProfileContext: {
+    executor: async () => ({}),
+    component: ProfileFormToolCard,
+    renderLocation: 'drawer'
   },
 
   // Add more tools here following the same pattern:

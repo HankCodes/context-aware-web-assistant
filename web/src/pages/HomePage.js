@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useAIAssistant } from '../ai-assistant';
+import { useAIAssistant, ProfileForm } from '../ai-assistant';
 import './HomePage.css';
 
 /**
@@ -7,13 +7,8 @@ import './HomePage.css';
  * Teaches developers how to use and extend the AI Assistant
  */
 function HomePage() {
-  const { setContext } = useAIAssistant();
+  const { context, setContext } = useAIAssistant();
   const [showContextModal, setShowContextModal] = useState(false);
-  const [userContext, setUserContext] = useState({
-    experience: '',
-    interest: '',
-    useCase: ''
-  });
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
@@ -28,18 +23,11 @@ function HomePage() {
         name: 'tutorial',
         title: 'AI Assistant Tutorial',
         description: 'Interactive tutorial showing how to integrate and extend the AI Assistant'
-      },
-      user: userContext
+      }
     });
-  }, [setContext, userContext]);
+  }, [setContext]);
 
-  const handleContextSubmit = (e) => {
-    e.preventDefault();
-    setShowContextModal(false);
-    localStorage.setItem('hasSeenOnboarding', 'true');
-  };
-
-  const handleSkip = () => {
+  const closeContextModal = () => {
     setShowContextModal(false);
     localStorage.setItem('hasSeenOnboarding', 'true');
   };
@@ -47,54 +35,19 @@ function HomePage() {
   return (
     <div className="home-page">
       {showContextModal && (
-        <div className="modal-overlay" onClick={handleSkip}>
+        <div className="modal-overlay" onClick={closeContextModal}>
           <div className="context-modal" onClick={(e) => e.stopPropagation()}>
             <h2>Welcome! Tell us about yourself</h2>
             <p>Help the AI Assistant provide more relevant information about the system.</p>
 
-            <form onSubmit={handleContextSubmit}>
-              <div className="form-group">
-                <label htmlFor="experience">Experience Level</label>
-                <input
-                  id="experience"
-                  type="text"
-                  placeholder="e.g., Developer, Designer, Product Manager, Business User"
-                  value={userContext.experience}
-                  onChange={(e) => setUserContext({ ...userContext, experience: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="interest">What interests you most?</label>
-                <input
-                  id="interest"
-                  type="text"
-                  placeholder="e.g., How to integrate, Adding custom features, Architecture"
-                  value={userContext.interest}
-                  onChange={(e) => setUserContext({ ...userContext, interest: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="useCase">What would you use this for?</label>
-                <input
-                  id="useCase"
-                  type="text"
-                  placeholder="e.g., Customer support, Internal tools, Product features"
-                  value={userContext.useCase}
-                  onChange={(e) => setUserContext({ ...userContext, useCase: e.target.value })}
-                />
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" onClick={handleSkip} className="btn-secondary">
-                  Skip
-                </button>
-                <button type="submit" className="btn-primary">
-                  Continue
-                </button>
-              </div>
-            </form>
+            <ProfileForm
+              initialValues={context.user || {}}
+              submitLabel="Continue"
+              onSave={(values) => setContext({ user: values })}
+              onCancel={closeContextModal}
+              cancelLabel="Skip"
+              onDone={closeContextModal}
+            />
           </div>
         </div>
       )}
@@ -167,6 +120,15 @@ function HomePage() {
               <h3>🤖 Agent Messages</h3>
               <p>Visit: Agent Messages page</p>
               <p className="example-note">Frontend can initiate messages (reacts to backend events)</p>
+            </div>
+
+            <div className="example-card">
+              <h3>👤 Profile Form</h3>
+              <p>Try: "Update my profile"</p>
+              <p className="example-note">
+                The same form component renders in a dialog from the button above, or in the
+                chat drawer when the AI opens it - both save to context independently
+              </p>
             </div>
           </div>
         </section>

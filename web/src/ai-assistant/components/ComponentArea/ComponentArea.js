@@ -34,12 +34,12 @@ function ComponentArea() {
 
       <div className="tool-results-grid">
         {componentAreaTools.length === 0 ? null : (
-          componentAreaTools.map((result, index) => {
+          componentAreaTools.map((result) => {
             const ToolRenderer = getToolRenderer(result.toolName);
 
             if (!ToolRenderer) {
               return (
-                <div key={index} className="tool-result-item">
+                <div key={result.toolName} className="tool-result-item">
                   <ToolCard onClose={() => handleRemoveTool(result.toolName)}>
                     <div className="tool-error">
                       Unknown tool: {result.toolName}
@@ -50,7 +50,7 @@ function ComponentArea() {
             }
 
             return (
-              <div key={index} className="tool-result-item">
+              <div key={result.toolName} className="tool-result-item">
                 <ToolCard onClose={() => handleRemoveTool(result.toolName)}>
                   <ToolRenderer data={result.data} />
                 </ToolCard>

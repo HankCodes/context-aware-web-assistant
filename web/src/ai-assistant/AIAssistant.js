@@ -171,7 +171,7 @@ function AIAssistant() {
 
   const handleOpenChat = () => {
     setIsChatDrawerOpen(true);
-    setCurrentNotification(null); 
+    setCurrentNotification(null);
   };
 
   const handleCloseChat = () => {

@@ -34,6 +34,15 @@ const tools = [
       required: [],
     },
   },
+  {
+    name: 'updateProfileContext',
+    description: 'Opens a form so the user can fill in or update their profile/context information (experience level, interests, use case). Use this ONLY when the user explicitly asks to update their profile, context, or tell you more about themselves.',
+    schema: {
+      type: 'object',
+      properties: {},
+      required: [],
+    },
+  },
 ];
 
 /**
