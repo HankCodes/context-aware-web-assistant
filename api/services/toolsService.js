@@ -37,7 +37,8 @@ const tools = [
 ];
 
 /**
- * Converts tool definitions to LangChain tool format
+ * Converts tool definitions to Anthropic's native tool format.
+ * Used for the Claude provider (and Ollama, which also accepts this shape).
  */
 function convertToLangChainTools() {
   return tools.map(tool => ({
@@ -47,7 +48,24 @@ function convertToLangChainTools() {
   }));
 }
 
+/**
+ * Converts tool definitions to the OpenAI Chat Completions tool format
+ * (`{ type: "function", function: { name, description, parameters } }`).
+ * Used for any OpenAI-compatible provider, e.g. LM Studio.
+ */
+function convertToOpenAITools() {
+  return tools.map(tool => ({
+    type: 'function',
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.schema,
+    },
+  }));
+}
+
 export {
   tools,
   convertToLangChainTools,
+  convertToOpenAITools,
 };
