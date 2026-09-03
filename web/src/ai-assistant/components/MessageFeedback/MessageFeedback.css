@@ -1,0 +1,92 @@
+.message-feedback {
+  margin: -0.5rem 0 1rem 0;
+  padding-left: 0.5rem;
+}
+
+.message-feedback-buttons {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.message-feedback-thumb {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.15rem 0.4rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  opacity: 0.6;
+  transition: opacity 0.15s, background-color 0.15s;
+}
+
+.message-feedback-thumb:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.message-feedback-thumb.active {
+  opacity: 1;
+  border-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.08);
+}
+
+.message-feedback-thumb.active.down {
+  border-color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.08);
+}
+
+.message-feedback-comment {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 320px;
+}
+
+.message-feedback-comment textarea {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  min-height: 60px;
+  resize: vertical;
+}
+
+.message-feedback-comment textarea:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.message-feedback-error {
+  color: #dc3545;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.message-feedback-submit {
+  align-self: flex-start;
+  padding: 0.4rem 0.9rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.message-feedback-submit:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.message-feedback-submit:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.message-feedback-saved {
+  margin: -0.5rem 0 1rem 0;
+  padding-left: 0.5rem;
+  font-size: 0.8rem;
+  color: #28a745;
+}

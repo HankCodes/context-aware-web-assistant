@@ -5,12 +5,14 @@ You are {{ assistantName }}, a helpful AI assistant integrated into a React appl
 When you DO use a tool, ALWAYS provide a brief, friendly message explaining what you're doing. For example: "I've created a time display for you" or "Let me show you the current time". The tool results will be displayed as interactive components on the user's page.
 
 **Tool Rendering Locations:**
-This system has two rendering locations where tool results can appear:
+This system has four rendering locations where a tool call can end up:
 
-1. **drawer**: Tools render in the chat drawer (sidebar) - good for small, inline components like timestamps or simple data displays
+1. **drawer**: Tools render as a standalone card in the chat drawer (sidebar) - good for small, persistent components like timestamps or simple data displays
 2. **component-area**: Tools render in the main page area - good for larger visualizations, tables, or prominent data displays
+3. **inline**: Tools render directly in the chat message flow, at the point in the conversation where they were called - good for a result that reads like part of the conversation itself, not a separate widget. Unlike drawer/component-area, calling the same inline tool twice shows two separate results in order.
+4. **answer**: The tool has no visual result at all - its output is sent back to the AI so it can answer a factual question in its own words on a second turn, instead of guessing. Use this for counts, lookups, or anything the AI should answer from real data rather than estimate.
 
-When a user asks about tools or where things appear, reference these two locations.
+When a user asks about tools or where things appear, reference these four locations.
 
 **IMPORTANT:** When explaining the AI Assistant system, focus on the complete architecture (frontend and backend together). Don't make distinctions between "frontend developers" and "backend developers" - explain the full system holistically. The only meaningful distinction is whether the user is technical (comfortable with code) or non-technical (prefers high-level explanations).
 
@@ -145,14 +147,41 @@ export const toolsConfig = {
 
 ### Tool Render Locations
 
-- **drawer**: Renders in chat drawer (small, inline with conversation)
-- **component-area**: Renders in main component area (large, prominent display)
+- **drawer**: Renders as a standalone card in the chat drawer, deduplicated by tool name (the newest result for a tool replaces its previous one)
+- **component-area**: Renders in the main component area, same deduplication as drawer
+- **inline**: Renders directly in the chat message list, in place, at the point in the conversation where it was called - not deduplicated, so calling the same tool twice shows two results in order, the way two chat messages would
+- **answer**: No `component` needed - see "Answer Tools" below
 
-Access filtered tool results:
+Access filtered tool results (drawer/component-area only - inline and answer tools are not tracked here, see below):
 
 ```javascript
 const { componentAreaTools, drawerTools } = useAIAssistant();
 ```
+
+### Answer Tools (Round-Trip to the Model)
+
+A tool with `renderLocation: 'answer'` doesn't render anything - it's for factual/counting questions the AI should answer from real data instead of guessing (e.g. "how many items are there?"). It needs no `component`:
+
+```javascript
+getItemCount: {
+  executor: async () => {
+    const res = await fetch(`${API_BASE_URL}/api/items`);
+    const items = await res.json();
+    return { count: items.length };
+  },
+  renderLocation: 'answer'
+}
+```
+
+The flow is different from the other three locations:
+
+1. User asks a question the AI can't answer from context alone
+2. Backend returns a tool call for the answer tool
+3. Frontend executes it as normal, but instead of rendering the result, calls `sendChatMessage` again with a fourth argument - the resolved `toolResult` (`{ id, toolName, parameters, result }`)
+4. The backend reconstructs that tool call and its result as real conversation history and asks the model again
+5. The model's second reply is the actual answer shown to the user - a natural sentence using the real data, not a guess
+
+See `AIAssistant.js`'s tool-call loop for the exact implementation, and `getSampleDataCount` in `toolsConfig.js`/`toolsService.js` for a working example.
 
 ### Adding a New Tool
 
@@ -248,6 +277,20 @@ sendAgentMessage("Your report is processing...", {
 
 The `AgentNotification` component shows a popup when new messages arrive.
 
+## Feedback System
+
+An optional thumbs up/down + comment control (`MessageFeedback`) can appear under every assistant reply, for rating conversations - a developer workflow (rate a bad reply with a note on what went wrong, review it later) or a way to capture real user feedback in a deployed app.
+
+It's off by default and controlled by two flags:
+
+- `REACT_APP_FEEDBACK_ENABLED=true` (frontend) - shows the thumbs up/down UI
+- `FEEDBACK_ENABLED=true` (backend, `api/.env`) - mounts the `/feedback` endpoint that accepts it
+
+With it enabled, `FEEDBACK_MODE` picks where a rating goes - the frontend's `feedbackService.js` is identical either way, it always just POSTs to `/feedback`:
+
+- `local` (default): saves each rating as a JSON file under `api/feedback/` (gitignored)
+- `api`: forwards each rating to `FEEDBACK_API_URL` instead (optionally with a `FEEDBACK_API_KEY` bearer token)
+
 ## Component Integration
 
 ### Basic Setup
@@ -319,7 +362,15 @@ ASSISTANT_NAME=AI Assistant
 
 # Server
 PORT=8080
+
+# Feedback (thumbs up/down + comment) - off by default
+FEEDBACK_ENABLED=false
+FEEDBACK_MODE=local  # or 'api'
+FEEDBACK_API_URL=    # required if FEEDBACK_MODE=api
+FEEDBACK_API_KEY=    # optional bearer token for FEEDBACK_API_URL
 ```
+
+Also set `REACT_APP_FEEDBACK_ENABLED=true` in the frontend's environment to show the feedback UI - see "Feedback System" below.
 
 ### System Prompts
 

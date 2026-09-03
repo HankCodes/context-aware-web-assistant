@@ -264,21 +264,36 @@ function ProductsPage() {
 
 Now the AI knows where users are and can respond contextually.
 
-### Two Rendering Locations
+### Four Rendering Locations
 
-**Drawer** - Small components in the chat sidebar:
+**Drawer** - Standalone components in the chat sidebar, deduplicated by tool name:
 
 ```javascript
 renderLocation: "drawer"; // Timestamps, quick info, notifications
 ```
 
-**Component Area** - Large visualizations on the main page:
+**Component Area** - Large visualizations on the main page, same deduplication as drawer:
 
 ```javascript
 renderLocation: "component-area"; // Charts, tables, data grids
 ```
 
-This needs the `ComnponentArea` component in your app.
+This needs the `ComponentArea` component in your app.
+
+**Inline** - Rendered directly in the chat message flow, in place, at the point in the conversation where it was called. Not deduplicated - calling the same tool twice shows two results in order, the way two chat messages would:
+
+```javascript
+renderLocation: "inline"; // A small card, chart, or confirmation that reads as part of the conversation
+```
+
+**Answer** - No UI at all. The result goes straight back to the AI, which answers in its own words on a second turn instead of guessing:
+
+```javascript
+renderLocation: "answer"; // Factual/counting questions - "how many X do I have?"
+// No `component` needed for this one.
+```
+
+See "Answering Questions From Real Data" below for how the round-trip works.
 
 ### Agent-Initiated Messages
 
@@ -293,6 +308,55 @@ sendAgentMessage("Your report is ready!", {
   reportId: 123,
 });
 ```
+
+### Answering Questions From Real Data
+
+For a factual/counting question you want answered from real data instead of a guess, register a tool with `renderLocation: "answer"` and no `component`:
+
+```javascript
+getOpenTicketsCount: {
+  executor: async () => {
+    const res = await fetch(`${API_BASE_URL}/api/tickets?status=open`);
+    const tickets = await res.json();
+    return { count: tickets.length };
+  },
+  renderLocation: "answer"
+}
+```
+
+Unlike the other three locations, this one is a round trip: the frontend executes the tool as normal, but instead of rendering a component, calls `sendChatMessage` again with a fourth argument - the resolved result:
+
+```javascript
+const followUp = await sendChatMessage(userMessage, chatHistory, context, {
+  id: toolCall.id,
+  toolName: toolCall.toolName,
+  parameters: toolCall.parameters,
+  result: toolResult,
+});
+// followUp.text is the model's real answer, composed from the actual data
+```
+
+The backend turns that into real conversation history (the tool call and its result, as the model would have seen them) and asks the model again - its second reply is the actual answer, e.g. "You have 4 open tickets." See `getSampleDataCount` in `toolsConfig.js`/`toolsService.js` for a complete working example, and `AIAssistant.js`'s tool-call loop for the exact wiring.
+
+### Rating Assistant Replies (Feedback)
+
+An optional thumbs up/down + comment control can appear under every assistant reply - useful during development (rate a bad reply with a note on what went wrong, review it later) or for capturing real user feedback once deployed. It's off by default:
+
+```bash
+# web/.env (or your build environment)
+REACT_APP_FEEDBACK_ENABLED=true
+
+# api/.env
+FEEDBACK_ENABLED=true
+FEEDBACK_MODE=local   # or 'api'
+```
+
+Two interchangeable modes, picked by `FEEDBACK_MODE` - your frontend code never changes, it always just calls `submitFeedback(...)`:
+
+- **`local`** (default): saves each rating as a JSON file under `api/feedback/` (gitignored) - read them back yourself to see what went wrong and fix it
+- **`api`**: forwards each rating to `FEEDBACK_API_URL` instead (optionally with a `FEEDBACK_API_KEY` bearer token), for collecting real user feedback into your own product-feedback pipeline
+
+The `MessageFeedback` component is already wired into `ChatDrawer.js` under every assistant message - nothing else to plug in.
 
 ---
 
@@ -411,7 +475,15 @@ ASSISTANT_NAME=AI Assistant
 
 # Server
 PORT=8080
+
+# Feedback (thumbs up/down + comment on assistant replies) - off by default
+FEEDBACK_ENABLED=false
+FEEDBACK_MODE=local        # or 'api'
+FEEDBACK_API_URL=          # required if FEEDBACK_MODE=api
+FEEDBACK_API_KEY=          # optional bearer token for FEEDBACK_API_URL
 ```
+
+Also set `REACT_APP_FEEDBACK_ENABLED=true` in the frontend's environment to show the feedback UI - see "Rating Assistant Replies" above.
 
 ### Available Context Methods
 

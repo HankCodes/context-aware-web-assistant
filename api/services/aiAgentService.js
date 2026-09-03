@@ -1,4 +1,4 @@
-import { HumanMessage, SystemMessage, AIMessage } from '@langchain/core/messages';
+import { HumanMessage, SystemMessage, AIMessage, ToolMessage } from '@langchain/core/messages';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
@@ -14,8 +14,19 @@ class AIAgentService {
     this.systemPromptTemplate = this._loadPromptTemplate(config.systemPrompt);
   }
 
-  async processChat(message, chatHistory = [], context = {}) {
-    const messages = await this._buildMessages(message, chatHistory, context);
+  /**
+   * @param {string} message
+   * @param {Array} chatHistory
+   * @param {Object} context
+   * @param {{id: string, toolName: string, parameters: Object, result: unknown}} [toolResult]
+   *   Pass this when the frontend already executed an "answer"-type tool call (see
+   *   `renderLocation: 'answer'` in the frontend's toolsConfig.js) and is handing back the
+   *   real result for the model to turn into a natural-language reply, instead of asking a
+   *   fresh question. We reconstruct the AIMessage(tool_calls) + ToolMessage(result) pair the
+   *   model expects to see, so it can answer from real data instead of guessing.
+   */
+  async processChat(message, chatHistory = [], context = {}, toolResult) {
+    const messages = await this._buildMessages(message, chatHistory, context, toolResult);
     const response = await this.llm.invoke(messages);
 
     const text = this._extractTextContent(response);
@@ -40,7 +51,7 @@ class AIAgentService {
     }
   }
 
-  async _buildMessages(message, chatHistory, context) {
+  async _buildMessages(message, chatHistory, context, toolResult) {
     const messages = [];
 
     const contextString = context && Object.keys(context).length > 0
@@ -69,6 +80,21 @@ class AIAgentService {
     })
 
     messages.push(new HumanMessage(message));
+
+    if (toolResult) {
+      messages.push(new AIMessage({
+        content: '',
+        tool_calls: [{
+          id: toolResult.id,
+          name: toolResult.toolName,
+          args: toolResult.parameters || {},
+        }],
+      }));
+      messages.push(new ToolMessage({
+        tool_call_id: toolResult.id,
+        content: JSON.stringify(toolResult.result),
+      }));
+    }
 
     return messages;
   }

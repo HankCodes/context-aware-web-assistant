@@ -10,9 +10,14 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
  * @param {string} message - The user's message
  * @param {Array} chatHistory - Array of previous messages
  * @param {Object} context - Optional context object (any structure)
+ * @param {{id: string, toolName: string, parameters: Object, result: unknown}} [toolResult] -
+ *   Pass this when this call is a continuation handing back the result of an "answer"-type tool
+ *   the backend just asked for (see `renderLocation: 'answer'` in toolsConfig.js). `message`
+ *   should still be the original user message that triggered it, so the backend can reconstruct
+ *   that turn.
  * @returns {Promise<Object>} The API response
  */
-export async function sendChatMessage(message, chatHistory = [], context = {}) {
+export async function sendChatMessage(message, chatHistory = [], context = {}, toolResult) {
   try {
     const response = await fetch(`${API_BASE_URL}/chat`, {
       method: 'POST',
@@ -23,6 +28,7 @@ export async function sendChatMessage(message, chatHistory = [], context = {}) {
         message,
         chatHistory,
         context,
+        toolResult,
       }),
     });
 

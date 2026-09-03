@@ -5,3 +5,4 @@
 
 export { default as TimeDisplay } from './TimeDisplay';
 export { default as SampleDataList } from './SampleDataList';
+export { default as ProfileForm } from './ProfileForm';
